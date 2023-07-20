@@ -56,8 +56,9 @@ function Item(){
 
     
     function getComments(res){
+        if(!res.comments) return
         flushSync(()=>{
-            setComments(res.comments||[])
+            setComments(res.comments)
         })
         const foundComment = document.getElementById(commentId.current)
         if(commentId.current && foundComment){
