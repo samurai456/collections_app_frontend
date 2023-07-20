@@ -21,6 +21,8 @@ import { EditItem } from './components/editItem/editItem'
 import { RequestProvider } from './contexts/requestContext'
 import { LangProvider } from './contexts/langContext'
 import { SearchResults } from './components/searchResults/searchResults'
+import { ForgotPassword } from './components/fogotPassword/fogotPassword'
+import { ResetPassword } from './components/resetPassword/resetPassword'
 
 function App(){
   
@@ -40,6 +42,8 @@ function App(){
                     } />
                     <Route path="/sign-up" element={ <SignUp /> } />
                     <Route path="/sign-in" element={ <SignIn /> } />
+                    <Route path="/forgot-password" element={ <ForgotPassword /> } />
+                    <Route path="/reset-password/:token/:userId" element={ <ResetPassword /> } />
                     <Route path="/user-collections/:authorId" element={ 
                       <HeaderFrame>
                         <UserCollections />

@@ -90,6 +90,11 @@ function SignIn(){
                     </Link>
                 </div>
             </div>
+            <div className={adaptive+'text-end mt-3'}>
+                <Link to="/forgot-password">
+                    {l('Forgot your password?','Забыли свой пароль?')}
+                </Link>
+            </div>
         </div>
     )
 }
