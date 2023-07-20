@@ -1,0 +1,12 @@
+.itemrow-dark{
+    background-color: #212529;
+}
+.itemrow-light{
+    background-color: #f4f4f4;
+}
+.hover-itemrow-dark:hover{
+    background-color: rgb(73, 73, 73);
+}
+.hover-itemrow-light:hover{
+    background-color: #e9e9e9;
+}
