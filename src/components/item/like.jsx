@@ -25,8 +25,10 @@ function Like({likes, liked, itemId, setLiked, setLikes}){
         )
     }
     let ruLikes='лайков'
+    let enLikes='likes'
     if(likes%10===1) ruLikes='лайк'
     if(1<likes%10 && likes%10<5) ruLikes='лайка'
+    if(likes===1) enLikes='like'
     return(
         <div className="row ps-5 py-3 align-items-center w-100 m-0">
             {permission!=='guest' && (
@@ -40,7 +42,7 @@ function Like({likes, liked, itemId, setLiked, setLikes}){
             )}
             <div className="col-auto fs-5">{ likes }</div>
             {permission==='guest' && <div className="col-auto fs-5">
-                {l('likes',ruLikes)}
+                {l(enLikes, ruLikes)}
             </div>}
         </div>
     )
