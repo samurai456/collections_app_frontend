@@ -1,7 +1,8 @@
 import { CollectionDetails } from './collectionDetails/collectionDetails'
 import { ItemsPanel } from './itemsPanel/itemsPanel'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useState, useEffect, useContext } from 'react'
+import { useEffect, useContext } from 'react'
+import { useImmer } from 'use-immer'
 import { backend } from '../../config'
 import loadingGif from '../adminPanel/static/loading.gif'
 import { useModalDelete } from '../../customHooks/useModalDelete'
@@ -13,17 +14,24 @@ function Collection(){
     const { request } = useContext(RequestContext)
     const navigate = useNavigate()
     const { collectionId } = useParams()
-    const [ collection, setCollection ] = useState('loading')
+    const [ collection, updateCollection ] = useImmer('loading')
     const setModal = useModalDelete()
 
     function requestCollection(){
         const cb = res =>{
             if(!res.collection) return navigate('/')
-            setCollection(res.collection)
+            res.collection.itemFields = res.collection.itemFields.map(i=>addFilter(i))
+            updateCollection(res.collection)
         }
         fetch(`${backend}/api/collection/${collectionId}`)
             .then(a=>a.json())
             .then(cb)
+    }
+
+    function addFilter(field){
+        if(field.type==='number') return {...field, filt: {min: '', max: ''}}
+        if(field.type==='date') return {...field, filt: {from: '', to: ''}}
+        return {...field, filt: ''}
     }
 
     useEffect(()=>requestCollection(), [])
@@ -35,7 +43,7 @@ function Collection(){
             }
         }
         const onDeleteClick = ()=>{
-            setCollection('loading')
+            updateCollection('loading')
             request(
                 `${backend}/api/collection/${collectionId}`, 
                 'delete', 
@@ -68,9 +76,9 @@ function Collection(){
                 {l('Collection items', 'Айтемы коллекции')}
             </b>
             <ItemsPanel 
-                fields={collection.itemFields} 
-                collectionId={collectionId}
-                authorId={collection.author._id}
+                addFilter={addFilter}
+                collection={collection}
+                updateCollection={updateCollection}
             />
         </div>
     )

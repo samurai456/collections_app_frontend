@@ -53,7 +53,6 @@ function Item(){
         ws.addCustomCb({key: 'add-comments', cb: getComments})
         return ()=>ws.close()
     }, [])
-
     
     function getComments(res){
         if(!res.comments) return

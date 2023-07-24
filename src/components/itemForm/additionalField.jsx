@@ -10,16 +10,10 @@ function AdditionalField({name, type, options, val, updateCollection}){
     let field;
     if(type === 'number'){
         field = <input 
-            autoFocus={true}
+            type="number"
             className={"form-control fs-5"+ti()}
             value={val}
-            onChange={e=>{
-                const v = e.target.value
-                if(v.length === 2 && v[0] ==='0' && v[1] !== '.') return
-                if(!v || !isNaN(Number(v)) ){
-                    updateCollection(updaterFunc(e.target.value))
-                }
-            }}
+            onChange={e=>updateCollection(updaterFunc(e.target.value))}
         />
     }
     if(type === 'string'){

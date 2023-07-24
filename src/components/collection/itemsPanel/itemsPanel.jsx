@@ -1,5 +1,6 @@
 import loadingGif from '../../adminPanel/static/loading.gif'
 import { ItemsToolBar } from './itemsToolBar'
+import { PagesMenu } from './pagesMenu'
 import { ItemsTable } from './itemsTable'
 import { useState, useEffect, useContext } from 'react'
 import { backend } from '../../../config'
@@ -9,25 +10,37 @@ import { useModalDelete } from '../../../customHooks/useModalDelete'
 import { RequestContext } from '../../../contexts/requestContext'
 import { LangContext } from '../../../contexts/langContext'
 import { downloadCSV } from '../../../downloadCSV'
+import { FilterModal } from './filterItems/filterModal'
 
-function ItemsPanel({ fields, collectionId, authorId }){
+function ItemsPanel({ collection, updateCollection, addFilter }){
+    const authorId = collection.author._id
     const {l} = useContext(LangContext)
     const navigate = useNavigate()
     const setModal = useModalDelete()
     const [ items, setItems ] = useState('loading')
+    const [ nameFilter, setNameFilter ] = useState({type: 'name', key: 'name', filt: ''})
+    const [ totalPages, setTotalPages ] = useState(1)
+    const [ currentPage, setCurrentPage ] = useState(1)
+    const [ showModal, setShowModal ] = useState(false)
     const { request } = useContext(RequestContext)
     const { permission, updatePermission } = useContext(PermissionContext)
 
-    useEffect(()=>requestForItems(), [])
+    useEffect(()=>requestForItems(), [currentPage])
 
-    function requestForItems(){
+    function requestForItems(withoutBody){
+        setItems('loading')
         const cb = res =>{
             const i = res.items.map(i=>({...i, checked: false}))
             setItems(i)
+            setTotalPages(res.pages)
+            if(currentPage > res.pages) setCurrentPage(res.pages)
         }
-        fetch(`${backend}/api/item/items-of-collection/${collectionId}`)
-            .then(a=>a.json())
-            .then(cb)
+        request(
+            `${backend}/api/item/items-of-collection/${collection._id}/${currentPage}`, 
+            'post', 
+            cb, 
+            withoutBody?[]:[...collection.itemFields, nameFilter]
+        )
     }
 
     function onDeleteClick(){
@@ -47,6 +60,14 @@ function ItemsPanel({ fields, collectionId, authorId }){
         )
     }
 
+    function handleClearAllFilters(){
+        setNameFilter({type: 'name', key: 'name', filt: ''})
+        updateCollection(draft=>{
+            draft.itemFields = draft.itemFields.map(i=>addFilter(i))
+        })
+        requestForItems(true)
+    }
+
     function handleDelete(){
         const c = items.filter(i=>i.checked).length
         if(!c) return
@@ -57,48 +78,62 @@ function ItemsPanel({ fields, collectionId, authorId }){
     }
 
     function handleExportToCSV(){
-        if(!items.length) return
-        downloadCSV(fields, items)
+        const cb = res =>{
+            if(!res.items?.length) return 
+            downloadCSV(collection.itemFields, res.items)
+        }
+        request(
+            `${backend}/api/item/download-items-of-collection/${collection._id}`, 
+            'post', 
+            cb, 
+            [...collection.itemFields, nameFilter]
+        )
     }
 
-    if(items === 'loading'){
-        return (
-            <div className="row justify-content-center mt-5">
-                <img src={loadingGif} className="col-xl-1 col-md-2 col-3" />
-            </div>
-        )
-    }
     const showCRUBButtons = permission==='admin'||sessionStorage.userId===authorId
-    if(!items.length){
-        return (
-            <div className="row align-items-center ps-5">
-                <div className="fs-4 py-3 col-auto">Collection is empty, yet</div>
-                {showCRUBButtons &&
-                    <button
-                        className="btn btn-primary m-1 px-4 py-3 col-auto"
-                        onClick={()=>navigate(`/create-item/${collectionId}`)}
-                    >
-                        New item
-                    </button>
-                }
-            </div>
-        )
-    }
     return(
-        <div>
+        <div className="mb-5">
             <div className="mb-4">
                 <ItemsToolBar
+                    emptyTable={items==='loading'||!items.length}
+                    setShowModal={setShowModal}
                     handleExportToCSV={handleExportToCSV}
                     handleDelete={handleDelete}
                     showCRUBButtons={showCRUBButtons}
                 />
+            </div>  
+            {totalPages>1 &&<PagesMenu 
+                totalPages={totalPages} 
+                currentPage={currentPage} 
+                setCurrentPage={setCurrentPage}
+            />}
+             {items!=='loading'? <>
+                <ItemsTable 
+                    fields={collection.itemFields} 
+                    items={items} 
+                    setItems={setItems} 
+                    showCRUBButtons={showCRUBButtons}
+                />
+                <FilterModal 
+                    nameFilter={nameFilter}
+                    setNameFilter={setNameFilter}
+                    handleClearAllFilters={handleClearAllFilters}
+                    requestForItems={requestForItems}
+                    showModal={showModal} 
+                    setShowModal={setShowModal} 
+                    fields={collection.itemFields}
+                    updateCollection={updateCollection}
+                />
+            </> :
+            <div className="row justify-content-center mt-5">
+                <img src={loadingGif} className="col-xl-1 col-md-2 col-3" />
             </div>
-            <ItemsTable 
-                fields={fields} 
-                items={items} 
-                setItems={setItems} 
-                showCRUBButtons={showCRUBButtons}
-            />
+            }
+            {totalPages>1 &&<PagesMenu 
+                totalPages={totalPages} 
+                currentPage={currentPage} 
+                setCurrentPage={setCurrentPage}
+            />}  
         </div>
     )
 }

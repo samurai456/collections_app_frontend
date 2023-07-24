@@ -9,6 +9,7 @@ function ItemsTableBody({fields, items, setItems, showCRUBButtons}){
 
     return(
         <tbody>
+            {!items.length&& <div className="ps-2 pt-3">no items</div>}
             {items.map(i=>(
                 <tr key={i._id} role="button" onClick={()=>navigate(`/item/${i._id}`)}>
                     {showCRUBButtons && 
